@@ -316,4 +316,28 @@ contract RootChain is Ownable {
     {
         return (exits[priority].owner, exits[priority].amount, exits[priority].utxoPos, exits[priority].created_at);
     }
+
+    /*
+    * Utilities
+    */
+
+    function max(uint256 a, uint256 b)
+        public
+        pure
+        returns (uint256)
+    {
+        return a > b ? a : b;
+    }
+
+    function calculatePriority(bytes txBytes)
+        public
+        pure
+        returns (uint256)
+    {
+        RLPReader.RLPItem[] memory txList = txBytes.toRlpItem().toList();
+
+        return max(
+          1000000000 * txList[0].toUint() + 10000 * txList[1].toUint() + txList[2].toUint(),
+          1000000000 * txList[4].toUint() + 10000 * txList[5].toUint() + txList[6].toUint());
+    }
 }
