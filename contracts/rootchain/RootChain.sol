@@ -139,7 +139,8 @@ contract RootChain is Ownable {
         require(msg.sender == txList[10 + 2 * txPos[2]].toAddress(), "address mismatch");
         require(msg.value == minExitBond, "incorrect exit bond");
 
-        uint256 priority = 1000000000*txPos[0] + 10000*txPos[1] + txPos[2];
+        /* uint256 priority = 1000000000*txPos[0] + 10000*txPos[1] + txPos[2]; */
+        uint256 priority = calculatePriority(txBytes);
 
         // creating the correct merkle leaf
         bytes32 txHash = keccak256(txBytes);
@@ -178,7 +179,8 @@ contract RootChain is Ownable {
         require(txList.length == 15, "incorrect tx list");
 
         // start-exit verification
-        uint256 priority = 1000000000*txPos[0] + 10000*txPos[1] + txPos[2];
+        /* uint256 priority = 1000000000*txPos[0] + 10000*txPos[1] + txPos[2]; */
+        uint256 priority = calculatePriority(txBytes);
         uint256[3] memory utxoPos = exits[priority].utxoPos;
         require(utxoPos[0] == txList[0 + 5 * newTxPos[2]].toUint(), "incorrect blocknum");
         require(utxoPos[1] == txList[1 + 5 * newTxPos[2]].toUint(), "incorrect tx index");

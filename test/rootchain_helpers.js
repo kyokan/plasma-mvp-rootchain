@@ -89,7 +89,13 @@ let startNewExit = async function(rootchain, sender, amount, minExitBond, blockN
   let exitSigs = Buffer.alloc(130).toString('hex') + confirmSignature.slice(2) + Buffer.alloc(65).toString('hex');
   await rootchain.startExit(txPos, toHex(txBytes),
       toHex(proofForDepositBlock), toHex(exitSigs), {from: sender, value: minExitBond });
-  let priority = 1000000000 * blockNum;
+
+  // let decodedBytes = RLP.decode(txBytes);
+
+  // assert.deepEqual(decodedBytes[0].toJson(), [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, sender, amount, 0, 0, 0]);
+
+  // console.log(decodedBytes[0].entries());
+  let priority = 0;
   let exit = await rootchain.getExit.call(priority);
   assert.equal(exit[0], sender, "Incorrect exit owner");
   assert.equal(exit[1], amount, "Incorrect amount");
@@ -117,7 +123,7 @@ let successfulFinalizeExit = async function(rootchain, sender, authority, blockN
   await rootchain.finalizeExits({from: authority});
 
   // exit prority
-  let priority = 1000000000 * blockNum;
+  let priority = 0;
 
   exit = await rootchain.getExit.call(priority);
   if (success) {
