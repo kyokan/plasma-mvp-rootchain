@@ -13,9 +13,24 @@ let {
 let createAndDepositTX = async function(rootchain, address, amount) {
     // submit a deposit
     let blockNum = (await rootchain.getDepositBlock.call()).toNumber();
-    let txBytes = RLP.encode([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, address, amount, 0, 0, 0]);
+    let txBytes = RLP.encode([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, address, amount, 0, 0, 5]);
     let validatorBlock = await rootchain.currentChildBlock.call();
     await rootchain.deposit(validatorBlock, toHex(txBytes), {from: address, value: amount});
+
+
+    // let encoded = RLP.encode([30,1]);
+    let decoded = RLP.decode(txBytes);
+
+    console.log(decoded[11].toString('hex'));
+    console.log(parseInt(decoded[11].toString('hex'), 16));
+    console.log(address);
+
+    // for (const pair of decoded[10].entries()) {
+    //   console.log(pair);
+    // }
+    // for (const pair of decoded[11].entries()) {
+    //   console.log(pair);
+    // }
 
     // construct the confirm sig
     // Remove all 0x prefixes from hex strings
