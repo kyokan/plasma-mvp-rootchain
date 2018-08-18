@@ -55,6 +55,11 @@ contract RootChain is Ownable {
         uint256 created_at;
     }
 
+    // constants
+    uint256 private outputIndexFactor;
+    uint256 private txIndexFactor;
+    uint256 private blockNumFactor;
+
     constructor() public
     {
         exitsQueue = new PriorityQueue();
@@ -66,6 +71,10 @@ contract RootChain is Ownable {
         lastParentBlock = block.number;
 
         minExitBond = 10000; // minimum bond needed to exit.
+
+        outputIndexFactor = 2 ** 64;
+        txIndexFactor = 2 ** 65;
+        blockNumFactor = 2 ** 81;
     }
 
     /// @param root 32 byte merkleRoot of ChildChain block
@@ -337,5 +346,39 @@ contract RootChain is Ownable {
         returns (address, uint256, uint256[3], uint256, uint8)
     {
         return (exits[priority].owner, exits[priority].amount, exits[priority].utxoPos, exits[priority].created_at, exits[priority].state);
+    }
+
+    /*
+    * Utilities
+    */
+
+    function max(uint256 a, uint256 b)
+        public
+        pure
+        returns (uint256)
+    {
+        return a > b ? a : b;
+    }
+
+    function calculatePriority(bytes txBytes)
+        public
+        view
+        returns (uint256)
+    {
+        RLPReader.RLPItem[] memory txList = txBytes.toRlpItem().toList();
+
+        uint256 inputOnePriority
+            = txList[3].toUint()
+            + outputIndexFactor * txList[2].toUint()
+            + txIndexFactor * txList[1].toUint()
+            + blockNumFactor * txList[0].toUint();
+
+        uint256 inputTwoPriority
+            = txList[7].toUint()
+            + outputIndexFactor * txList[6].toUint()
+            + txIndexFactor * txList[5].toUint()
+            + blockNumFactor * txList[4].toUint();
+
+        return max(inputOnePriority, inputTwoPriority);
     }
 }
