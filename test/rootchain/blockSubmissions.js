@@ -55,24 +55,24 @@ contract('Block Submissions', async (accounts) => {
         let validatorBlock = parseInt(await rootchain.currentChildBlock.call())
         let err;
 
-        let txBytes1 = RLP.encode([0, 0, 0, 0, 0, 0, 0, 0, accounts[2], 50000, 0, 0, 0]);
+        let txBytes1 = RLP.encode([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, accounts[2], 50000, 0, 0, 0]);
         [err] = await catchError(rootchain.deposit(validatorBlock, toHex(txBytes1), {from: accounts[2], value: 50}));
         if (!err)
             assert.fail("Submitted deposit with a value mismatch");
 
-        let txBytes2 = RLP.encode([0, 0, 0, 0, 0, 0, 0, 0, accounts[2], 50000, accounts[3], 10000, 0]);
+        let txBytes2 = RLP.encode([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, accounts[2], 50000, accounts[3], 10000, 0]);
         [err] = await catchError(rootchain.deposit(validatorBlock, toHex(txBytes2), {from: accounts[2], value: 50000}));
         if (!err)
             assert.fail("Submitted deposit with a nonzero denom for the second output");
 
-        let txBytes3 = RLP.encode([3, 5, 0, 0, 0, 0, 0, 0, accounts[2], 50000, 0, 0, 0]);
+        let txBytes3 = RLP.encode([3, 5, 0, 0, 0, 0, 0, 0, 0, 0, accounts[2], 50000, 0, 0, 0]);
         [err] = await catchError(rootchain.deposit(validatorBlock, toHex(txBytes3), {from: accounts[2], value: 50000}));
         if (!err)
             assert.fail("Submitted deposit with required nonzero fields");
     });
 
     it("Deposit after unseen submitted block", async () => {
-        let txBytes = RLP.encode([0, 0, 0, 0, 0, 0, 0, 0, accounts[2], 50000, 0, 0, 0]);
+        let txBytes = RLP.encode([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, accounts[2], 50000, 0, 0, 0]);
         let validatorBlock = (await rootchain.currentChildBlock.call()).toNumber();
 
         rootchainHelpers.mineNBlocks(5, authority);

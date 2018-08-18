@@ -24,7 +24,7 @@ let fastForward = async function() {
 // Create a generic deposit
 let createAndDepositTX = async function(rootchain, address, amount) {
     let blockNum = (await rootchain.getDepositBlock.call()).toNumber();
-    let txBytes = RLP.encode([0, 0, 0, 0, 0, 0, 0, 0, address, amount, 0, 0, 0]);
+    let txBytes = RLP.encode([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, address, amount, 0, 0, 0]);
     let validatorBlock = await rootchain.currentChildBlock.call();
 
     let tx = await rootchain.deposit(validatorBlock, toHex(txBytes), {from: address, value: amount});
@@ -38,7 +38,7 @@ let createAndDepositTX = async function(rootchain, address, amount) {
 // checks that it succeeds
 let startExit = async function(rootchain, sender, amount, minExitBond, blockNum, txPos, txBytes) {
   let exitSigs = Buffer.alloc(130).toString('hex');
-  
+
   await rootchain.startExit(txPos, toHex(txBytes),
       toHex(proofForDepositBlock), toHex(exitSigs), {from: sender, value: minExitBond });
 
