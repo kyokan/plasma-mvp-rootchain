@@ -38,7 +38,7 @@ let createAndDepositTX = async function(rootchain, address, amount) {
 // checks that it succeeds
 let startExit = async function(rootchain, sender, amount, minExitBond, blockNum, txPos, txBytes) {
   let exitSigs = Buffer.alloc(130).toString('hex');
-  
+
   await rootchain.startExit(txPos, toHex(txBytes),
       toHex(proofForDepositBlock), toHex(exitSigs), {from: sender, value: minExitBond });
 
@@ -46,7 +46,7 @@ let startExit = async function(rootchain, sender, amount, minExitBond, blockNum,
   let exit = await rootchain.getExit.call(priority);
   assert.equal(exit[0], sender, "Incorrect exit owner");
   assert.equal(exit[1], amount, "Incorrect amount");
-  assert.equal(exit[2][0], blockNum, "Incorrect block number");
+  assert.equal(Number(exit[2][0]), Number(blockNum), "Incorrect block number");
 };
 
 // 512 bytes
