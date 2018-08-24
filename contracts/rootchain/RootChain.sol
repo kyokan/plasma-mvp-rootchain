@@ -99,8 +99,8 @@ contract RootChain is Ownable {
 
     /// @dev txBytes Length 13 RLP encoding of Transaction excluding signatures
     /// Transaction encoding:
-    /// [Blknum1, TxIndex1, Oindex1, Amount1, depositNonce1
-    ///  Blknum2, TxIndex2, Oindex2, Amount2, depositNonce1,
+    /// [Blknum1, TxIndex1, Oindex1, depositNonce1, Amount1,
+    ///  Blknum2, TxIndex2, Oindex2, depositNonce2, Amount2,
     ///  NewOwner, Denom1, NewOwner, Denom2, Fee]
     /// @notice owner and value should be encoded in Output 1
     /// @notice hash of txBytes is hashed with a empty signature
@@ -374,10 +374,10 @@ contract RootChain is Ownable {
             + blockNumFactor * txList[0].toUint();
 
         uint256 inputTwoPriority
-            = txList[7].toUint()
-            + outputIndexFactor * txList[6].toUint()
-            + txIndexFactor * txList[5].toUint()
-            + blockNumFactor * txList[4].toUint();
+            = txList[8].toUint()
+            + outputIndexFactor * txList[7].toUint()
+            + txIndexFactor * txList[6].toUint()
+            + blockNumFactor * txList[5].toUint();
 
         return max(inputOnePriority, inputTwoPriority);
     }

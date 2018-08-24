@@ -31,8 +31,6 @@ let createAndDepositTX = async function(rootchain, address, amount) {
 
     let blockHeader = (await rootchain.getChildChain.call(blockNum))[0];
 
-    console.log(await calculatePriority(txBytes));
-
     return [tx, blockNum, txBytes];
 };
 
@@ -54,8 +52,6 @@ let startExit = async function(rootchain, sender, amount, minExitBond, blockNum,
 let calculatePriority = async function(txBytes) {
   let decodedBytes = await decodeTxBytes(txBytes)
 
-  console.log(decodedBytes);
-
   let inputOnePriority
       = decodedBytes[3]
       + outputIndexFactor * decodedBytes[2]
@@ -63,10 +59,10 @@ let calculatePriority = async function(txBytes) {
       + blockNumFactor * decodedBytes[0];
 
   let inputTwoPriority
-      = decodedBytes[7]
-      + outputIndexFactor * decodedBytes[6]
-      + txIndexFactor * decodedBytes[5]
-      + blockNumFactor * decodedBytes[4];
+      = decodedBytes[8]
+      + outputIndexFactor * decodedBytes[7]
+      + txIndexFactor * decodedBytes[6]
+      + blockNumFactor * decodedBytes[5];
 
   return Math.max(inputOnePriority, inputTwoPriority);
 }
@@ -142,6 +138,7 @@ module.exports = {
     fastForward,
     mineNBlocks,
     startExit,
+    calculatePriority,
     proofForDepositBlock,
     zeroHashes
 };
