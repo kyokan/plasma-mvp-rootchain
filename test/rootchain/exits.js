@@ -17,6 +17,7 @@ contract('Exit Transactions', async (accounts) => {
     let rootchain;
     let minExitBond = 10000;
     let authority = accounts[0];
+    let depositExitSigs = Buffer.alloc(130).toString('hex');
     before(async () => {
         // clean contract: needed because of balance dependent tests (last test)
         rootchain = await RootChain.new();
@@ -29,7 +30,7 @@ contract('Exit Transactions', async (accounts) => {
         [tx, blockNum, txBytes] = await rootchainHelpers.createAndDepositTX(rootchain, accounts[2], depositAmount);
 
         let txPos = [blockNum, 0, 0];
-        await rootchainHelpers.startExit(rootchain, accounts[2], depositAmount, minExitBond, blockNum, txPos, txBytes);
+        await rootchainHelpers.startExit(rootchain, accounts[2], depositAmount, minExitBond, blockNum, txPos, txBytes, depositExitSigs);
     });
 
     it("Try to exit with invalid parameters", async () => {
@@ -82,7 +83,7 @@ contract('Exit Transactions', async (accounts) => {
           // start a new exit
           let txPos = [blockNum, 0, 0];
           let priority = 1000000000 * blockNum;
-          await rootchainHelpers.startExit(rootchain, accounts[2], depositAmount, minExitBond, blockNum, txPos, txBytes);
+          await rootchainHelpers.startExit(rootchain, accounts[2], depositAmount, minExitBond, blockNum, txPos, txBytes, depositExitSigs);
           let state = (await rootchain.getExit.call(priority))[4];
           assert(state == 1, "Exit not in the pending state");
 
@@ -141,6 +142,7 @@ contract('Exit Transactions', async (accounts) => {
         let txHash = web3.sha3(txBytes.toString('hex'), {encoding: 'hex'});
         let sigs = await web3.eth.sign(accounts[2], txHash);
         sigs += Buffer.alloc(65).toString('hex');
+        console.log(sigs.slice(2).length);
         let leaf = web3.sha3(txHash.slice(2) + sigs.slice(2), {encoding: 'hex'});
 
         // create the block and submit as an authority
@@ -155,7 +157,7 @@ contract('Exit Transactions', async (accounts) => {
         // start a new exit
         let txPos = [newBlockNum, 0, 0];
         let priority = 1000000000 * newBlockNum;
-        await rootchainHelpers.startExit(rootchain, accounts[3], depositAmount, minExitBond, newBlockNum, txPos, txBytes); //TODO: provide correct proof
+        await rootchainHelpers.startExit(rootchain, accounts[3], depositAmount, minExitBond, newBlockNum, txPos, txBytes, sigs.slice(2)); //TODO: provide correct proof
         let state = (await rootchain.getExit.call(priority))[4];
         assert(state == 1, "Exit not in the pending state");
 
@@ -184,7 +186,7 @@ contract('Exit Transactions', async (accounts) => {
         [tx, blockNum, txBytes] = await rootchainHelpers.createAndDepositTX(rootchain, accounts[2], depositAmount);
         let txPos = [blockNum, 0, 0];
         let priority = 1000000000 * blockNum;
-        await rootchainHelpers.startExit(rootchain, accounts[2], depositAmount, minExitBond, blockNum, txPos, txBytes);
+        await rootchainHelpers.startExit(rootchain, accounts[2], depositAmount, minExitBond, blockNum, txPos, txBytes, depositExitSigs);
         let state = (await rootchain.getExit.call(priority))[4];
         assert(state == 1, "Exit not in the pending state");
 
@@ -193,7 +195,7 @@ contract('Exit Transactions', async (accounts) => {
         state = (await rootchain.getExit.call(priority))[4];
         assert(state == 3, "Exit not in the finalized state");
 
-        let [err] = await catchError(rootchainHelpers.startExit(rootchain, accounts[2], depositAmount, minExitBond, blockNum, txPos, txBytes));
+        let [err] = await catchError(rootchainHelpers.startExit(rootchain, accounts[2], depositAmount, minExitBond, blockNum, txPos, txBytes, depositExitSigs));
         if (!err)
             assert.fail("Reopened a finalized exit");
     });
