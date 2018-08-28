@@ -37,7 +37,6 @@ let createAndDepositTX = async function(rootchain, address, amount) {
 // start a new exit
 // checks that it succeeds
 let startExit = async function(rootchain, sender, amount, minExitBond, blockNum, txPos, txBytes, exitSigs) {
-  // let exitSigs = Buffer.alloc(130).toString('hex');
 
   await rootchain.startExit(txPos, toHex(txBytes),
       toHex(proofForDepositBlock), toHex(exitSigs), {from: sender, value: minExitBond });

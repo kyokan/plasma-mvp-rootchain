@@ -142,7 +142,6 @@ contract('Exit Transactions', async (accounts) => {
         let txHash = web3.sha3(txBytes.toString('hex'), {encoding: 'hex'});
         let sigs = await web3.eth.sign(accounts[2], txHash);
         sigs += Buffer.alloc(65).toString('hex');
-        console.log(sigs.slice(2).length);
         let leaf = web3.sha3(txHash.slice(2) + sigs.slice(2), {encoding: 'hex'});
 
         // create the block and submit as an authority
