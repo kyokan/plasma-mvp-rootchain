@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity ^0.5.0;
 
 import "openzeppelin-solidity/contracts/cryptography/ECDSA.sol";
 import "./BytesUtil.sol";
@@ -11,7 +11,7 @@ library Validator {
     // @param input1      indicator for the second input
     // @param sigs        transaction signatures
     // @notice            when one input is present, we require it to be the first input by convention
-    function checkSignatures(bytes32 txHash, bytes32 confirmationHash, bool input1, bytes sig0, bytes sig1, bytes confirmSignatures)
+    function checkSignatures(bytes32 txHash, bytes32 confirmationHash, bool input1, bytes memory sig0, bytes memory sig1, bytes memory confirmSignatures)
         internal
         pure
         returns (bool)
@@ -36,7 +36,7 @@ library Validator {
         return recoveredAddr == recover(confirmationHash, confirmSignatures) && recoveredAddr != address(0);
     }
 
-    function recover(bytes32 hash, bytes sig)
+    function recover(bytes32 hash, bytes memory sig)
         internal
         pure
         returns (address)

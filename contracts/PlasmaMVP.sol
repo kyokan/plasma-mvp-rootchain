@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity ^0.5.0;
 
 // external modules
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
@@ -113,7 +113,7 @@ contract PlasmaMVP {
     // @param txnsPerBlock number of transactions per block
     // @param feesPerBlock amount of fees the validator has collected per block
     // @param blockNum     the block number of the first header
-    function submitBlock(bytes32[] headers, uint256[] txnsPerBlock, uint256[] feesPerBlock, uint256 blockNum)
+    function submitBlock(bytes32[] memory headers, uint256[] memory txnsPerBlock, uint256[] memory feesPerBlock, uint256 blockNum)
         public
         onlyOperator
     {
@@ -175,7 +175,7 @@ contract PlasmaMVP {
     //
     // @param txBytes rlp encoded transaction
     // @notice this function will revert if the txBytes are malformed
-    function decodeTransaction(bytes txBytes)
+    function decodeTransaction(bytes memory txBytes)
         internal
         pure
         returns (RLPReader.RLPItem[] memory txList, RLPReader.RLPItem[] memory sigList, bytes32 txHash)
@@ -199,7 +199,7 @@ contract PlasmaMVP {
     // @param confirmSignatures confirm signatures sent by the owners of the inputs acknowledging the spend.
     // @notice `confirmSignatures` and `ConfirmSig0`/`ConfirmSig1` are unrelated to each other.
     // @notice `confirmSignatures` is either 65 or 130 bytes in length dependent on if input2 is used.
-    function startTransactionExit(uint256[3] txPos, bytes txBytes, bytes proof, bytes confirmSignatures, uint256 committedFee)
+    function startTransactionExit(uint256[3] memory txPos, bytes memory txBytes, bytes memory proof, bytes memory confirmSignatures, uint256 committedFee)
         public
         payable
         isBonded
@@ -230,7 +230,7 @@ contract PlasmaMVP {
 
     // @returns amount of the exiting transaction
     // @notice the purpose of this helper was to work around the capped evm stack frame
-    function startTransactionExitHelper(uint256[3] txPos, bytes txBytes, bytes proof, bytes confirmSignatures)
+    function startTransactionExitHelper(uint256[3] memory txPos, bytes memory txBytes, bytes memory proof, bytes memory confirmSignatures)
         private
         view
         returns (uint256)
@@ -325,7 +325,7 @@ contract PlasmaMVP {
     // @param challengingTxPos transaction position [blkNum, txIndex]
     // @param txBytes raw bytes of the transaction
     // @param proof merkle proof of the included transaction
-    function challengeFeeMismatch(uint256[4] exitingTxPos, uint256[2] challengingTxPos, bytes txBytes, bytes proof)
+    function challengeFeeMismatch(uint256[4] memory exitingTxPos, uint256[2] memory challengingTxPos, bytes memory txBytes, bytes memory proof)
         public
     {
         RLPReader.RLPItem[] memory txList;
@@ -339,7 +339,7 @@ contract PlasmaMVP {
         childBlock memory plasmaBlock = childChain[challengingTxPos[0]];
         require(sha256(txBytes).checkMembership(challengingTxPos[1], plasmaBlock.root, proof, plasmaBlock.numTxns), "incorrect merkle proof");
 
-        exit storage exit_ = exitingTxPos[3] == 0 ? 
+        exit storage exit_ = exitingTxPos[3] == 0 ?
             txExits[blockIndexFactor*exitingTxPos[0] + txIndexFactor*exitingTxPos[1] + exitingTxPos[2]] : depositExits[exitingTxPos[3]];
         require(exit_.state == ExitState.Pending, "an exit must be pending");
 
@@ -360,7 +360,7 @@ contract PlasmaMVP {
     // @param txBytes          raw transaction bytes of the challenging transaction
     // @param proof            proof of inclusion for this merkle hash
     // @param confirmSignature signature used to invalidate the invalid exit. Signature is over (merkleHash, block header)
-    function challengeExit(uint256[4] exitingTxPos, uint256[2] challengingTxPos, bytes txBytes, bytes proof, bytes confirmSignature)
+    function challengeExit(uint256[4] memory exitingTxPos, uint256[2] memory challengingTxPos, bytes memory txBytes, bytes memory proof, bytes memory confirmSignature)
         public
     {
         RLPReader.RLPItem[] memory txList;
@@ -373,7 +373,7 @@ contract PlasmaMVP {
             "challenging transaction is not a direct spend");
 
         // transaction to be challenged should have a pending exit
-        exit storage exit_ = exitingTxPos[3] == 0 ? 
+        exit storage exit_ = exitingTxPos[3] == 0 ?
             txExits[blockIndexFactor*exitingTxPos[0] + txIndexFactor*exitingTxPos[1] + exitingTxPos[2]] : depositExits[exitingTxPos[3]];
         require(exit_.state == ExitState.Pending, "no pending exit to challenge");
 
@@ -456,12 +456,12 @@ contract PlasmaMVP {
 
             // move onto the next oldest exit
             priority = queue[0];
-            
+
             // retrieve the right 128 bits from the priority to obtain the position
             assembly {
    			    position := and(priority, div(not(0x0), exp(256, 16)))
 		    }
-             
+
             currentExit = isDeposits ? depositExits[position] : txExits[position];
         }
     }
