@@ -84,7 +84,7 @@ contract PlasmaMVP {
     /** Modifiers **/
     modifier isBonded()
     {
-        require(msg.value >= minExitBond, "insufficient bond committed");
+        require(msg.value >= minExitBond);
         if (msg.value > minExitBond) {
             uint256 excess = msg.value.sub(minExitBond);
             balances[msg.sender] = balances[msg.sender].add(excess);
@@ -96,7 +96,7 @@ contract PlasmaMVP {
 
     modifier onlyOperator()
     {
-        require(msg.sender == operator, "unauthorized");
+        require(msg.sender == operator);
         _;
     }
 
@@ -117,11 +117,11 @@ contract PlasmaMVP {
         public
         onlyOperator
     {
-        require(blockNum == lastCommittedBlock + 1, "inconsistent block number ordering");
-        require(headers.length == txnsPerBlock.length && headers.length == feesPerBlock.length, "mismatch in the number of headers, txn numbers, and fees");
+        require(blockNum == lastCommittedBlock + 1);
+        require(headers.length == txnsPerBlock.length && headers.length == feesPerBlock.length);
 
         for (uint i = 0; i < headers.length; i++) {
-            require(txnsPerBlock[i] <= maxTxnsPerBLock, "number of transactions in block exceeds limit");
+            require(txnsPerBlock[i] <= maxTxnsPerBLock);
 
             childChain[blockNum + i] = childBlock(headers[i], txnsPerBlock[i], feesPerBlock[i], block.timestamp);
             emit BlockSubmitted(headers[i], blockNum + i, txnsPerBlock[i], feesPerBlock[i]);
@@ -147,9 +147,9 @@ contract PlasmaMVP {
         payable
         isBonded
     {
-        require(deposits[nonce].owner == msg.sender, "mismatch in owner");
-        require(deposits[nonce].amount > committedFee, "committedFee out of bounds of the deposit amount");
-        require(depositExits[nonce].state == ExitState.NonExistent, "exit for this deposit already exists");
+        require(deposits[nonce].owner == msg.sender);
+        require(deposits[nonce].amount > committedFee);
+        require(depositExits[nonce].state == ExitState.NonExistent);
 
         uint amount = deposits[nonce].amount;
         address owner = deposits[nonce].owner;
@@ -181,13 +181,13 @@ contract PlasmaMVP {
         returns (RLPReader.RLPItem[] memory txList, RLPReader.RLPItem[] memory sigList, bytes32 txHash)
     {
         RLPReader.RLPItem[] memory spendMsg = txBytes.toRlpItem().toList();
-        require(spendMsg.length == 2, "incorrect encoding of the transcation");
+        require(spendMsg.length == 2);
 
         txList = spendMsg[0].toList();
-        require(txList.length == 17, "incorrect number of items in the transaction list");
+        require(txList.length == 17);
 
         sigList = spendMsg[1].toList();
-        require(sigList.length == 2, "two signatures must be present");
+        require(sigList.length == 2);
 
         // bytes the signatures are over
         txHash = keccak256(spendMsg[0].toRlpBytes());
@@ -205,10 +205,10 @@ contract PlasmaMVP {
         isBonded
     {
         uint256 position = blockIndexFactor*txPos[0] + txIndexFactor*txPos[1] + txPos[2];
-        require(txExits[position].state == ExitState.NonExistent, "this exit has already been started, challenged, or finalized");
+        require(txExits[position].state == ExitState.NonExistent);
 
         uint256 amount = startTransactionExitHelper(txPos, txBytes, proof, confirmSignatures);
-        require(amount > committedFee, "committedFee out of bounds of the transaction amount");
+        require(amount > committedFee);
 
         // calculate the priority of the transaction taking into account the withdrawal delay attack
         // withdrawal delay attack: https://github.com/FourthState/plasma-mvp-rootchain/issues/42
@@ -240,7 +240,7 @@ contract PlasmaMVP {
         RLPReader.RLPItem[] memory sigList;
         (txList, sigList, txHash) = decodeTransaction(txBytes);
 
-        require(msg.sender == txList[12 + 2*txPos[2]].toAddress(), "mismatch in utxo owner");
+        require(msg.sender == txList[12 + 2*txPos[2]].toAddress());
 
         childBlock memory plasmaBlock = childChain[txPos[0]];
 
@@ -249,13 +249,13 @@ contract PlasmaMVP {
         require(txHash.checkSignatures(sha256(abi.encodePacked(merkleHash, plasmaBlock.root)), // confirmation hash -- sha256(merkleHash, root)
                          // we always assume the first input is always present in a transaction. The second input is optional
                          txList[6].toUint() > 0 || txList[9].toUint() > 0,
-                         sigList[0].toBytes(), sigList[1].toBytes(), confirmSignatures), "signature mismatch");
+                         sigList[0].toBytes(), sigList[1].toBytes(), confirmSignatures));
 
         // check proof
-        require(merkleHash.checkMembership(txPos[1], plasmaBlock.root, proof, plasmaBlock.numTxns), "invalid merkle proof");
+        require(merkleHash.checkMembership(txPos[1], plasmaBlock.root, proof, plasmaBlock.numTxns));
 
         // check that the UTXO's two direct inputs have not been previously exited
-        require(validateTransactionExitInputs(txList), "an input is pending an exit or has been finalized");
+        require(validateTransactionExitInputs(txList));
 
         return txList[13 + 2*txPos[2]].toUint();
     }
@@ -298,12 +298,12 @@ contract PlasmaMVP {
         isBonded
     {
         // specified blockNumber must exist in child chain
-        require(childChain[blockNumber].root != bytes32(0), "specified block does not exist in child chain.");
+        require(childChain[blockNumber].root != bytes32(0));
 
         // a fee UTXO has explicitly defined position [blockNumber, 2**16 - 1, 0]
         uint256 txIndex = 2**16 - 1;
         uint256 position = blockIndexFactor*blockNumber + txIndexFactor*txIndex;
-        require(txExits[position].state == ExitState.NonExistent, "this exit has already been started, challenged, or finalized");
+        require(txExits[position].state == ExitState.NonExistent);
 
         txExitQueue.insert(max(childChain[blockNumber].createdAt + 1 weeks, block.timestamp) << 128 | position);
 
@@ -333,18 +333,17 @@ contract PlasmaMVP {
 
         // exitingTxPos must be the first input of the challenging transaction
         require(exitingTxPos[0] == txList[0].toUint() && exitingTxPos[1] == txList[1].toUint()
-                && exitingTxPos[2] == txList[2].toUint() && exitingTxPos[3] == txList[3].toUint(),
-                "exiting transcation must be the first input of the challenging transaction");
+                && exitingTxPos[2] == txList[2].toUint() && exitingTxPos[3] == txList[3].toUint());
 
         childBlock memory plasmaBlock = childChain[challengingTxPos[0]];
-        require(sha256(txBytes).checkMembership(challengingTxPos[1], plasmaBlock.root, proof, plasmaBlock.numTxns), "incorrect merkle proof");
+        require(sha256(txBytes).checkMembership(challengingTxPos[1], plasmaBlock.root, proof, plasmaBlock.numTxns));
 
         exit storage exit_ = exitingTxPos[3] == 0 ?
             txExits[blockIndexFactor*exitingTxPos[0] + txIndexFactor*exitingTxPos[1] + exitingTxPos[2]] : depositExits[exitingTxPos[3]];
-        require(exit_.state == ExitState.Pending, "an exit must be pending");
+        require(exit_.state == ExitState.Pending);
 
         uint256 feeAmount = txList[16].toUint();
-        require(exit_.committedFee != feeAmount, "no mismatch in committed fee");
+        require(exit_.committedFee != feeAmount);
 
         // award the challenger the bond
         balances[msg.sender] = balances[msg.sender].add(minExitBond);
@@ -375,15 +374,15 @@ contract PlasmaMVP {
         // transaction to be challenged should have a pending exit
         exit storage exit_ = exitingTxPos[3] == 0 ?
             txExits[blockIndexFactor*exitingTxPos[0] + txIndexFactor*exitingTxPos[1] + exitingTxPos[2]] : depositExits[exitingTxPos[3]];
-        require(exit_.state == ExitState.Pending, "no pending exit to challenge");
+        require(exit_.state == ExitState.Pending);
 
         // confirm challenging transcation's inclusion and confirm signature
         childBlock memory blk = childChain[challengingTxPos[0]];
 
         bytes32 merkleHash = sha256(txBytes);
         bytes32 confirmationHash = sha256(abi.encodePacked(merkleHash, blk.root));
-        require(exit_.owner == confirmationHash.recover(confirmSignature), "mismatch in exit owner and confirm signature");
-        require(merkleHash.checkMembership(challengingTxPos[1], blk.root, proof, blk.numTxns), "incorrect merkle proof");
+        require(exit_.owner == confirmationHash.recover(confirmSignature));
+        require(merkleHash.checkMembership(challengingTxPos[1], blk.root, proof, blk.numTxns));
 
         // exit successfully challenged. Award the sender with the bond
         balances[msg.sender] = balances[msg.sender].add(minExitBond);
